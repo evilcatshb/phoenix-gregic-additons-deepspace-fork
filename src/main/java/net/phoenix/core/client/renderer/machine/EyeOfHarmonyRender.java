@@ -3,7 +3,7 @@ package net.phoenix.core.client.renderer.machine;
 import com.gregtechceu.gtceu.api.machine.multiblock.WorkableElectricMultiblockMachine;
 import com.gregtechceu.gtceu.client.renderer.machine.DynamicRender;
 import com.gregtechceu.gtceu.client.renderer.machine.DynamicRenderType;
-import com.gregtechceu.gtceu.client.util.ModelUtils;
+import com.gregtechceu.gtceu.client.util.ModelEventHelper;
 
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.Sheets;
@@ -41,17 +41,24 @@ public class EyeOfHarmonyRender extends DynamicRender<WorkableElectricMultiblock
     static final RandomSource random = RandomSource.create();
 
     private EyeOfHarmonyRender() {
-        ModelUtils.registerBakeEventListener(true, event -> {
-            spaceShellModel = event.getModels().get(SPACE_SHELL_MODEL_RL);
-            starModel = event.getModels().get(STAR_MODEL_RL);
-            netherModel = event.getModels().get(ORBIT_OBJECTS_RL.get(0));
-            overworldModel = event.getModels().get(ORBIT_OBJECTS_RL.get(1));
-            endModel = event.getModels().get(ORBIT_OBJECTS_RL.get(2));
+        ModelEventHelper.registerBakeEventListener(true, (rl, baked, rootModel, modelBakery) -> {
+            if (rl.equals(SPACE_SHELL_MODEL_RL)) {
+                spaceShellModel = baked;
+            } else if (rl.equals(STAR_MODEL_RL)) {
+                starModel = baked;
+            } else if (rl.equals(ORBIT_OBJECTS_RL.get(0))) {
+                netherModel = baked;
+            } else if (rl.equals(ORBIT_OBJECTS_RL.get(1))) {
+                overworldModel = baked;
+            } else if (rl.equals(ORBIT_OBJECTS_RL.get(2))) {
+                endModel = baked;
+            }
 
             orbitModels.clear();
             orbitModels.add(netherModel);
             orbitModels.add(overworldModel);
             orbitModels.add(endModel);
+            return baked;
         });
     }
 
@@ -186,6 +193,6 @@ public class EyeOfHarmonyRender extends DynamicRender<WorkableElectricMultiblock
 
     @Override
     public AABB getRenderBoundingBox(WorkableElectricMultiblockMachine machine) {
-        return new AABB(machine.getPos()).inflate(getViewDistance());
+        return new AABB(machine.getBlockPos()).inflate(getViewDistance());
     }
 }

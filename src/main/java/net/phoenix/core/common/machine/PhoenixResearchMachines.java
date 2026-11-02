@@ -1,8 +1,8 @@
 package net.phoenix.core.common.machine;
 
 import com.gregtechceu.gtceu.api.data.RotationState;
-import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
+import com.gregtechceu.gtceu.api.machine.MachineInstanceFactory;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.multiblock.PartAbility;
 import com.gregtechceu.gtceu.api.machine.property.GTMachineModelProperties;
@@ -15,8 +15,6 @@ import net.phoenix.core.common.machine.multiblock.part.hpca.BasicPhoenixComputat
 import net.phoenix.core.common.machine.multiblock.part.hpca.BasicPhoenixCoolerPartMachine;
 import net.phoenix.core.common.machine.multiblock.part.hpca.PhoenixComputationPartMachine;
 import net.phoenix.core.common.machine.multiblock.part.hpca.PhoenixCoolerPartMachine;
-
-import java.util.function.Function;
 
 import static com.gregtechceu.gtceu.api.GTValues.*;
 import static com.gregtechceu.gtceu.common.data.machines.GTResearchMachines.OVERHEAT_TOOLTIPS;
@@ -114,9 +112,11 @@ public class PhoenixResearchMachines {
                 .register();
     }
 
-    private static MachineBuilder<MachineDefinition> registerCoolingHPCAPart(String name, String displayName,
-                                                                             Function<IMachineBlockEntity, MetaMachine> constructor,
-                                                                             String texture, boolean isAdvanced) {
+    private static MachineBuilder<MachineDefinition, MetaMachine, ?> registerCoolingHPCAPart(String name,
+                                                                                             String displayName,
+                                                                                             MachineInstanceFactory<MetaMachine> constructor,
+                                                                                             String texture,
+                                                                                             boolean isAdvanced) {
         return REGISTRATE.machine(name, constructor)
                 .langValue(displayName)
                 .rotationState(RotationState.ALL)
@@ -130,9 +130,11 @@ public class PhoenixResearchMachines {
                                 .id("block/overlay/machine/hpca/damaged" + (isAdvanced ? "_advanced" : ""))));
     }
 
-    private static MachineBuilder<MachineDefinition> registerComputationHPCAPart(String name, String displayName,
-                                                                                 Function<IMachineBlockEntity, MetaMachine> constructor,
-                                                                                 String texture, boolean isAdvanced) {
+    private static MachineBuilder<MachineDefinition, MetaMachine, ?> registerComputationHPCAPart(String name,
+                                                                                                 String displayName,
+                                                                                                 MachineInstanceFactory<MetaMachine> constructor,
+                                                                                                 String texture,
+                                                                                                 boolean isAdvanced) {
         return REGISTRATE.machine(name, constructor)
                 .langValue(displayName)
                 .rotationState(RotationState.ALL)

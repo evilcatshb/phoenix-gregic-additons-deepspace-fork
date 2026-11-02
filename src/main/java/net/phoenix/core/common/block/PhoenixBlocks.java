@@ -1,12 +1,10 @@
 package net.phoenix.core.common.block;
 
-import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.GTCEuAPI;
 import com.gregtechceu.gtceu.api.block.ICoilType;
 import com.gregtechceu.gtceu.api.block.IFilterType;
 import com.gregtechceu.gtceu.common.block.CoilBlock;
 import com.gregtechceu.gtceu.common.data.models.GTModels;
-import com.gregtechceu.gtceu.common.registry.GTRegistration;
 import com.gregtechceu.gtceu.data.recipe.CustomTags;
 
 import net.minecraft.world.item.BlockItem;
@@ -15,7 +13,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SoundType;
 import net.phoenix.core.PhoenixGregicAdditons;
-import net.phoenix.core.common.registry.PhoenixRegistration;
 import net.phoenix.core.configs.PhoenixConfigs;
 
 import com.tterrag.registrate.util.entry.BlockEntry;
@@ -76,7 +73,6 @@ public class PhoenixBlocks {
     public static BlockEntry<Block> PHOENIX_COMPUTER_HEAT_VENT = registerSimpleBlock(
             "§dPhoenix Computer Heat Vent", "phoenix_computer_heat_vent",
             "casings/heat_vent/phoenix_computer_heat_vent", BlockItem::new);
-
 
     static {
         if (PhoenixConfigs.INSTANCE.features.blazingCleanroomEnabled) {

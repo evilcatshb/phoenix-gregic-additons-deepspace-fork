@@ -1,90 +1,72 @@
 package net.phoenix.core.integration.ae2;
 
+import com.gregtechceu.gtceu.api.blockentity.BlockEntityCreationInfo;
 import com.gregtechceu.gtceu.api.capability.recipe.IO;
-import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.gui.widget.ToggleButtonWidget;
-import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.feature.IDataStickInteractable;
-import com.gregtechceu.gtceu.api.machine.feature.IHasCircuitSlot;
-import com.gregtechceu.gtceu.api.machine.feature.IMachineLife;
-import com.gregtechceu.gtceu.api.machine.trait.NotifiableItemStackHandler;
+import com.gregtechceu.gtceu.common.mui.GTGuiTextures;
 import com.gregtechceu.gtceu.integration.ae2.machine.MEBusPartMachine;
 import com.gregtechceu.gtceu.integration.ae2.slot.ExportOnlyAEItemList;
 import com.gregtechceu.gtceu.integration.ae2.slot.ExportOnlyAEItemSlot;
 import com.gregtechceu.gtceu.utils.GTMath;
 
-import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
-import com.lowdragmc.lowdraglib.gui.texture.TextTexture;
-import com.lowdragmc.lowdraglib.gui.widget.*;
-import com.lowdragmc.lowdraglib.syncdata.annotation.DescSynced;
-import com.lowdragmc.lowdraglib.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib.syncdata.field.ManagedFieldHolder;
-import com.lowdragmc.lowdraglib.utils.Position;
-import com.lowdragmc.lowdraglib.utils.Size;
-
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.phoenix.core.integration.ae2.utils.TagMatcher;
 
 import appeng.api.config.Actionable;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
 import appeng.api.storage.MEStorage;
-import org.jetbrains.annotations.NotNull;
+import brachy.modularui.api.drawable.Text;
+import brachy.modularui.factory.PosGuiData;
+import brachy.modularui.screen.UISettings;
+import brachy.modularui.screen.viewport.ModularGuiContext;
+import brachy.modularui.theme.WidgetThemeEntry;
+import brachy.modularui.value.sync.PanelSyncManager;
+import brachy.modularui.value.sync.StringSyncValue;
+import brachy.modularui.widget.ParentWidget;
+import brachy.modularui.widget.Widget;
+import brachy.modularui.widgets.ButtonWidget;
+import brachy.modularui.widgets.layout.Flow;
+import brachy.modularui.widgets.layout.Grid;
+import brachy.modularui.widgets.textfield.TextFieldWidget;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class METagInputBusPartMachine extends MEBusPartMachine
-                                      implements IDataStickInteractable, IMachineLife, IHasCircuitSlot {
-
-    protected static final ManagedFieldHolder MANAGED_FIELD_HOLDER = new ManagedFieldHolder(
-            METagInputBusPartMachine.class, MEBusPartMachine.MANAGED_FIELD_HOLDER);
+                                      implements IDataStickInteractable {
 
     protected static final int CONFIG_SIZE = 32;
 
-    @Persisted
-    @DescSynced
-    protected ExportOnlyAEItemList aeItemHandler;
+    protected final ExportOnlyAEItemList aeItemHandler;
 
-    @Persisted
-    @DescSynced
     protected String whitelistExpr = "";
-    @Persisted
-    @DescSynced
     protected String blacklistExpr = "";
 
     protected int refreshTimer = 0;
 
-    @DescSynced
-    public ItemStack[] previewStacks = new ItemStack[CONFIG_SIZE];
+    public final ItemStack[] previewStacks = new ItemStack[CONFIG_SIZE];
+    public final long[] previewAmounts = new long[CONFIG_SIZE];
 
-    @DescSynced
-    public long[] previewAmounts = new long[CONFIG_SIZE];
-
-    public METagInputBusPartMachine(IMachineBlockEntity holder, Object... args) {
-        super(holder, IO.IN, args);
+    public METagInputBusPartMachine(BlockEntityCreationInfo info) {
+        super(info, IO.IN, new ExportOnlyAEItemList(CONFIG_SIZE));
+        this.aeItemHandler = (ExportOnlyAEItemList) getInventory();
         for (int i = 0; i < CONFIG_SIZE; i++) {
             previewStacks[i] = ItemStack.EMPTY;
         }
     }
 
-    @Override
-    public ManagedFieldHolder getFieldHolder() {
-        return MANAGED_FIELD_HOLDER;
-    }
-
-    @Override
-    protected NotifiableItemStackHandler createInventory(Object... args) {
-        this.aeItemHandler = new ExportOnlyAEItemList(this, CONFIG_SIZE);
-        return this.aeItemHandler;
-    }
+    /////////////////////////////////
+    // ***** Machine LifeCycle ****//
+    /////////////////////////////////
 
     @Override
     public void onLoad() {
@@ -93,7 +75,8 @@ public class METagInputBusPartMachine extends MEBusPartMachine
     }
 
     @Override
-    public void onMachineRemoved() {
+    public void onMachineDestroyed() {
+        super.onMachineDestroyed();
         flushInventory();
     }
 
@@ -109,8 +92,12 @@ public class METagInputBusPartMachine extends MEBusPartMachine
         }
     }
 
+    /////////////////////////////////
+    // ********** Sync ME *********//
+    /////////////////////////////////
+
     @Override
-    public void autoIO() {
+    protected void autoIO() {
         if (!this.isWorkingEnabled() || !this.shouldSyncME()) return;
 
         if (this.updateMEStatus()) {
@@ -125,8 +112,6 @@ public class METagInputBusPartMachine extends MEBusPartMachine
     }
 
     protected void syncME() {
-        // 1. Grid Safety Check: If the grid is null, we can't do anything.
-        // We clear all previews so the player doesn't see "ghost" items when the power is out.
         if (getMainNode().getGrid() == null) {
             for (int i = 0; i < CONFIG_SIZE; i++) {
                 previewStacks[i] = ItemStack.EMPTY;
@@ -140,7 +125,6 @@ public class METagInputBusPartMachine extends MEBusPartMachine
         for (int i = 0; i < CONFIG_SIZE; i++) {
             ExportOnlyAEItemSlot aeSlot = this.aeItemHandler.getInventory()[i];
 
-            // 2. Handle Overflow: Push items back to the network if they exceed the slot limits
             GenericStack exceedItem = aeSlot.exceedStack();
             if (exceedItem != null) {
                 long inserted = networkInv.insert(exceedItem.what(), exceedItem.amount(), Actionable.MODULATE,
@@ -148,7 +132,6 @@ public class METagInputBusPartMachine extends MEBusPartMachine
                 if (inserted > 0) aeSlot.extractItem(0, GTMath.saturatedCast(inserted), false);
             }
 
-            // 3. Handle Pulling: Request items from the network based on the Tag Config
             GenericStack reqItem = aeSlot.requestStack();
             if (reqItem != null && reqItem.what() instanceof AEItemKey key) {
                 if (isAllowed(key)) {
@@ -158,20 +141,16 @@ public class METagInputBusPartMachine extends MEBusPartMachine
                 }
             }
 
-            // 4. Update UI Previews: Ensure the ghost icons and amounts are accurate
             GenericStack stock = aeSlot.getStock();
             GenericStack config = aeSlot.getConfig();
 
             if (stock != null && stock.what() instanceof AEItemKey itemKey) {
-                // If items are physically in the bus, show them and their real count
                 previewStacks[i] = itemKey.toStack(1);
                 previewAmounts[i] = stock.amount();
             } else if (config != null && config.what() instanceof AEItemKey configKey) {
-                // If the slot is empty but configured (waiting for items), show the "Ghost" icon with 0
                 previewStacks[i] = configKey.toStack(1);
                 previewAmounts[i] = 0L;
             } else {
-                // If there is no item and no configuration, the slot must be visually empty
                 previewStacks[i] = ItemStack.EMPTY;
                 previewAmounts[i] = 0L;
             }
@@ -179,115 +158,10 @@ public class METagInputBusPartMachine extends MEBusPartMachine
     }
 
     protected boolean isAllowed(AEItemKey key) {
-        // If everything is empty, allow nothing.
         if (whitelistExpr.isBlank() && blacklistExpr.isBlank()) return false;
-
         if (!blacklistExpr.isBlank() && TagMatcher.doesItemMatch(key, blacklistExpr)) return false;
-
-        // Whitelist check: if whitelist exists, it MUST match.
         if (!whitelistExpr.isBlank()) return TagMatcher.doesItemMatch(key, whitelistExpr);
-
-        // If there is only a blacklist and it passed, it's allowed.
         return true;
-    }
-
-    @Override
-    public @NotNull Widget createUIWidget() {
-        WidgetGroup group = new WidgetGroup(new Position(0, 0), new Size(176, 220));
-
-        group.addWidget(new LabelWidget(3, 0,
-                () -> this.isOnline ? "gtceu.gui.me_network.online" : "gtceu.gui.me_network.offline"));
-
-        group.addWidget(new ToggleButtonWidget(176 - 45, 0, 40, 16, () -> false, pressed -> {
-            whitelistExpr = "";
-            blacklistExpr = "";
-            updateConfigurationFromTags();
-        }).setTexture(new GuiTextureGroup(GuiTextures.VANILLA_BUTTON, new TextTexture("Clear")),
-                new GuiTextureGroup(GuiTextures.VANILLA_BUTTON, new TextTexture("Clear"))));
-
-        int y = 18;
-        group.addWidget(new LabelWidget(5, y, "Whitelist Tags"));
-
-        y += 12;
-
-        group.addWidget(new MultilineTextFieldWidget(5, y, 166, 30,
-                () -> whitelistExpr,
-                val -> {
-                    whitelistExpr = val;
-                    updateConfigurationFromTags();
-                },
-                Component.literal("...")));
-
-        y += 36;
-        group.addWidget(new LabelWidget(5, y, "Blacklist Tags"));
-
-        y += 12;
-        group.addWidget(new MultilineTextFieldWidget(5, y, 166, 30,
-                () -> blacklistExpr,
-                val -> {
-                    blacklistExpr = val;
-                    updateConfigurationFromTags();
-                },
-                Component.literal("...")));
-
-        y += 36;
-        group.addWidget(new LabelWidget(5, y, "Item Preview (Read Only)"));
-
-        y += 15;
-        for (int i = 0; i < CONFIG_SIZE; i++) {
-            int col = i % 8;
-            int row = i / 8;
-
-            group.addWidget(new LargeAmountPreviewWidget(16 + col * 18, y + row * 18, i, this));
-        }
-
-        return group;
-    }
-
-    /**
-     * Specialized widget that renders the icons from previewStacks
-     * but pulls quantity from previewAmounts (Long).
-     */
-    private static class LargeAmountPreviewWidget extends Widget {
-
-        private final int index;
-        private final METagInputBusPartMachine machine;
-
-        public LargeAmountPreviewWidget(int x, int y, int index, METagInputBusPartMachine machine) {
-            super(new Position(x, y), new Size(18, 18));
-            this.index = index;
-            this.machine = machine;
-        }
-
-        @Override
-        public void drawInBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-            Position pos = getPosition();
-            GuiTextures.SLOT.draw(graphics, mouseX, mouseY, pos.x, pos.y, 18, 18);
-
-            ItemStack stack = machine.previewStacks[index];
-            if (stack != null && !stack.isEmpty()) {
-                com.lowdragmc.lowdraglib.gui.util.DrawerHelper.drawItemStack(graphics, stack, pos.x + 1, pos.y + 1,
-                        0xFFFFFFFF, null);
-
-                long amount = machine.previewAmounts[index];
-                if (amount > 0) {
-                    String amountStr = com.lowdragmc.lowdraglib.gui.util.TextFormattingUtil
-                            .formatLongToCompactString(amount, 4);
-                    com.lowdragmc.lowdraglib.gui.util.DrawerHelper.drawStringFixedCorner(graphics, amountStr,
-                            pos.x + 17, pos.y + 17, 0xFFFFFFFF, true, 0.5f);
-                }
-            }
-        }
-
-        @Override
-        public void drawInForeground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-            if (isMouseOverElement(mouseX, mouseY)) {
-                ItemStack stack = machine.previewStacks[index];
-                if (stack != null && !stack.isEmpty()) {
-                    graphics.renderTooltip(net.minecraft.client.Minecraft.getInstance().font, stack, mouseX, mouseY);
-                }
-            }
-        }
     }
 
     protected void updateConfigurationFromTags() {
@@ -297,27 +171,18 @@ public class METagInputBusPartMachine extends MEBusPartMachine
         var availableInNetwork = storage.getAvailableStacks();
         boolean changed = false;
 
-        System.out.println("[TagBus] Scanning... Whitelist: " + whitelistExpr);
-
-        // 1. CLEANUP: Check existing slots
         java.util.Set<AEItemKey> alreadyConfigured = new java.util.HashSet<>();
         for (int i = 0; i < CONFIG_SIZE; i++) {
             var slot = this.aeItemHandler.getInventory()[i];
             GenericStack config = slot.getConfig();
 
             if (config != null && config.what() instanceof AEItemKey key) {
-                // Check if the item still exists in the network
                 boolean stillExists = availableInNetwork.get(key) > 0;
 
                 if (isAllowed(key) && stillExists) {
                     alreadyConfigured.add(key);
                 } else {
-                    // Item is gone or no longer allowed - WIPE EVERYTHING
-                    System.out.println(
-                            "[TagBus] Clearing Slot " + i + ": " + (stillExists ? "Disallowed" : "Gone from ME"));
                     slot.setConfig(null);
-
-                    // INSTANT UI CLEAR: Don't wait for syncME to catch up
                     previewStacks[i] = ItemStack.EMPTY;
                     previewAmounts[i] = 0L;
                     changed = true;
@@ -325,15 +190,12 @@ public class METagInputBusPartMachine extends MEBusPartMachine
             }
         }
 
-        // 2. FILL: Find NEW items in the network
         for (var entry : availableInNetwork) {
             if (entry.getKey() instanceof AEItemKey itemKey && isAllowed(itemKey)) {
                 if (!alreadyConfigured.contains(itemKey)) {
                     for (int i = 0; i < CONFIG_SIZE; i++) {
                         var slot = this.aeItemHandler.getInventory()[i];
                         if (slot.getConfig() == null) {
-                            System.out.println(
-                                    "[TagBus] Adding new match: " + itemKey.toStack().getDisplayName().getString());
                             slot.setConfig(new GenericStack(itemKey, Integer.MAX_VALUE));
                             alreadyConfigured.add(itemKey);
                             changed = true;
@@ -351,11 +213,126 @@ public class METagInputBusPartMachine extends MEBusPartMachine
 
     private void notifyUpdate() {
         this.updateInventorySubscription();
-        this.markDirty();
-        if (self().getHolder() != null) {
-            self().getHolder().self().setChanged();
+        self().setChanged();
+    }
+
+    /////////////////////////////////
+    // ************ UI ************//
+    /////////////////////////////////
+
+    @Override
+    public void buildMainUI(ParentWidget<?> mainWidget, PosGuiData guiData, PanelSyncManager syncManager,
+                            UISettings settings) {
+        StringSyncValue whitelistValue = new StringSyncValue(() -> whitelistExpr, val -> {
+            whitelistExpr = val;
+            updateConfigurationFromTags();
+        }).allowC2S();
+        StringSyncValue blacklistValue = new StringSyncValue(() -> blacklistExpr, val -> {
+            blacklistExpr = val;
+            updateConfigurationFromTags();
+        }).allowC2S();
+
+        var flow = Flow.col().coverChildren();
+
+        flow.child(Text.dynamic(() -> isOnline() ?
+                Component.translatable("gtceu.gui.me_network.online") :
+                Component.translatable("gtceu.gui.me_network.offline"))
+                .asWidget().marginBottom(4));
+
+        flow.child(new ButtonWidget<>()
+                .size(60, 16)
+                .overlay(Text.str("Clear"))
+                .onMousePressed((context, button) -> {
+                    if (button != 0) return false;
+                    whitelistExpr = "";
+                    blacklistExpr = "";
+                    updateConfigurationFromTags();
+                    return true;
+                }).marginBottom(4));
+
+        flow.child(Text.str("Whitelist Tags").asWidget());
+        flow.child(new TextFieldWidget().width(166).height(30).value(whitelistValue).marginBottom(4));
+
+        flow.child(Text.str("Blacklist Tags").asWidget());
+        flow.child(new TextFieldWidget().width(166).height(30).value(blacklistValue).marginBottom(4));
+
+        flow.child(Text.str("Item Preview (Read Only)").asWidget().marginBottom(2));
+
+        Grid previewGrid = new Grid()
+                .coverChildren()
+                .gridOfSizeWidth(8, 4,
+                        (x, y, i) -> i < CONFIG_SIZE ? createPreviewSlot(i) : new Widget<>().size(18, 18));
+        flow.child(previewGrid);
+
+        mainWidget.child(flow.center());
+    }
+
+    private Widget<?> createPreviewSlot(int index) {
+        return new ItemPreviewWidget(index, this).size(18, 18);
+    }
+
+    /**
+     * Read-only widget rendering an item preview and its (possibly large) network-backed amount.
+     */
+    private static class ItemPreviewWidget extends Widget<ItemPreviewWidget> {
+
+        private final int index;
+        private final METagInputBusPartMachine machine;
+
+        public ItemPreviewWidget(int index, METagInputBusPartMachine machine) {
+            this.index = index;
+            this.machine = machine;
+        }
+
+        @OnlyIn(Dist.CLIENT)
+        @Override
+        public void draw(ModularGuiContext context, WidgetThemeEntry<?> widgetTheme) {
+            var graphics = context.getGraphics();
+            GTGuiTextures.SLOT.draw(context, 0, 0, 18, 18);
+
+            ItemStack stack = machine.previewStacks[index];
+            if (stack != null && !stack.isEmpty()) {
+                graphics.renderItem(stack, 1, 1);
+
+                long amount = machine.previewAmounts[index];
+                if (amount > 0) {
+                    var font = net.minecraft.client.Minecraft.getInstance().font;
+                    String amountStr = formatCompact(amount);
+                    graphics.pose().pushPose();
+                    graphics.pose().translate(17.0, 17.0, 0.0);
+                    graphics.pose().scale(0.5f, 0.5f, 1.0f);
+                    int textWidth = font.width(amountStr);
+                    graphics.drawString(font, amountStr, -textWidth, -8, 0xFFFFFFFF, true);
+                    graphics.pose().popPose();
+                }
+            }
+        }
+
+        @OnlyIn(Dist.CLIENT)
+        @Override
+        public void drawForeground(ModularGuiContext context) {
+            if (isHovering()) {
+                ItemStack stack = machine.previewStacks[index];
+                if (stack != null && !stack.isEmpty()) {
+                    context.getGraphics().renderTooltip(net.minecraft.client.Minecraft.getInstance().font, stack,
+                            context.getMouseX(), context.getMouseY());
+                }
+            }
+        }
+
+        private static String formatCompact(long amount) {
+            if (amount < 1000) return Long.toString(amount);
+            String[] suffixes = { "", "K", "M", "B", "T" };
+            int magnitude = (int) (Math.log10(amount) / 3);
+            magnitude = Math.min(magnitude, suffixes.length - 1);
+            double shortened = amount / Math.pow(1000, magnitude);
+            return String.format("%.1f%s", shortened, suffixes[magnitude]);
         }
     }
+
+    /////////////////////////////////
+    // ******* Data Stick *********//
+    /////////////////////////////////
 
     @Override
     public final InteractionResult onDataStickShiftUse(Player player, ItemStack dataStick) {
@@ -364,7 +341,6 @@ public class METagInputBusPartMachine extends MEBusPartMachine
             tag.put("METagInputBus", writeConfigToTag());
             dataStick.setTag(tag);
 
-            String displayName = whitelistExpr.isBlank() ? "Empty Tag Bus" : "Tag Bus: " + whitelistExpr;
             dataStick.setHoverName(Component.literal("ME Tag Input Bus Configuration Data")
                     .withStyle(style -> style.withItalic(true)));
 
@@ -381,9 +357,7 @@ public class METagInputBusPartMachine extends MEBusPartMachine
 
         if (!isRemote()) {
             readConfigFromTag(dataStick.getTag().getCompound("METagInputBus"));
-
             updateConfigurationFromTags();
-
             player.sendSystemMessage(Component.literal("Settings Pasted successfully."));
         }
         return InteractionResult.sidedSuccess(isRemote());
@@ -400,10 +374,5 @@ public class METagInputBusPartMachine extends MEBusPartMachine
         this.whitelistExpr = tag.getString("WhitelistExpr");
         this.blacklistExpr = tag.getString("BlacklistExpr");
         updateConfigurationFromTags();
-    }
-
-    @Override
-    public @NotNull NotifiableItemStackHandler getCircuitInventory() {
-        return circuitInventory;
     }
 }

@@ -31,3 +31,14 @@ bin/
 run/
 run-data/
 /src/generated/resources/.cache/*
+# Local build diagnostics and temporary source/JAR extraction artifacts
+build_*.txt
+build_err*.txt
+build_errors.txt
+build_log*.txt
+proc_id*.txt
+gtceu_api_dump.txt
+gtceu_src/
+jar_extract/
+jar_extract2/
+jar_extract_mui/

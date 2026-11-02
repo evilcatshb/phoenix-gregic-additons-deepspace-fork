@@ -15,7 +15,7 @@ public class PhoenixRecipeModifiers {
 
     public static @NotNull ModifierFunction heatDrawnSpeedBoost(MetaMachine machine, GTRecipe recipe) {
         for (var content : recipe.getInputContents(FluidRecipeCapability.CAP)) {
-            if (content.content instanceof FluidIngredient fluidIngredient) {
+            if (content.content() instanceof FluidIngredient fluidIngredient) {
                 for (var fluidStack : fluidIngredient.getStacks()) {
                     if (fluidStack.getFluid().getFluidType().getTemperature() > 6000) {
                         return ModifierFunction.builder()

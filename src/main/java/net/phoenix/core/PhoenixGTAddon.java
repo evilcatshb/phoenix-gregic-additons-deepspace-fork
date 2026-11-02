@@ -8,6 +8,7 @@ import net.minecraft.data.recipes.FinishedRecipe;
 import net.phoenix.core.common.data.PhoenixCovers;
 import net.phoenix.core.common.data.PhoenixMachineRecipes;
 import net.phoenix.core.common.data.materials.PhoenixElements;
+import net.phoenix.core.common.data.materials.PhoenixMaterialFlags;
 
 import java.util.function.Consumer;
 
@@ -32,7 +33,7 @@ public class PhoenixGTAddon implements IGTAddon {
 
     @Override
     public void registerTagPrefixes() {
-        // CustomTagPrefixes.init();
+        PhoenixMaterialFlags.init();
     }
 
     @Override

@@ -1,76 +1,36 @@
 package net.phoenix.core.common.machine.multiblock.part.hpca;
 
 import com.gregtechceu.gtceu.api.GTValues;
-import com.gregtechceu.gtceu.api.capability.IHPCACoolantProvider;
-import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
+import com.gregtechceu.gtceu.api.blockentity.BlockEntityCreationInfo;
 import com.gregtechceu.gtceu.common.machine.multiblock.part.hpca.HPCAComponentPartMachine;
-
-import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
+import com.gregtechceu.gtceu.common.machine.trait.hpca.HPCACoolantProviderTrait;
+import com.gregtechceu.gtceu.common.mui.GTGuiTextures;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.phoenix.core.configs.PhoenixConfigs;
 
-import lombok.Getter;
-
 import javax.annotation.ParametersAreNonnullByDefault;
 
-/**
- * A custom HPCA Cooler Part for the Phoenix mod.
- * This class is designed to handle both a standard and an advanced version
- * within the same class, similar to the original GTCEu implementation.
- */
+// Custom HPCA Cooler Part for the Phoenix mod.
+// Handles both a standard and an advanced version via the advanced flag.
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class BasicPhoenixCoolerPartMachine extends HPCAComponentPartMachine implements IHPCACoolantProvider {
+public class BasicPhoenixCoolerPartMachine extends HPCAComponentPartMachine {
 
-    // The 'advanced' property is handled by the HPCAComponentPartMachine base class.
-    // We simply use the value from the superclass to determine behavior.
-
-    @Getter
-    private final boolean advanced;
-
-    public BasicPhoenixCoolerPartMachine(IMachineBlockEntity holder, boolean advanced) {
-        // We pass 'false' to the super constructor because we are defining a new,
-        // single-tier part that isn't 'advanced' in the base sense.
-        super(holder);
-        this.advanced = advanced;
+    public BasicPhoenixCoolerPartMachine(BlockEntityCreationInfo info, boolean advanced) {
+        super(info, advanced,
+                advanced ? GTGuiTextures.HPCA_ACTIVE_COOLER_COMPONENT : GTGuiTextures.HPCA_HEAT_SINK_COMPONENT,
+                advanced ? GTGuiTextures.HPCA_ACTIVE_COOLER_COMPONENT : GTGuiTextures.HPCA_HEAT_SINK_COMPONENT,
+                createTrait(advanced));
     }
 
-    /**
-     * Defines the component icon based on whether it is the advanced version.
-     * 
-     * @return The resource texture for the part's icon.
-     */
-    @Override
-    public ResourceTexture getComponentIcon() {
-        return advanced ? GuiTextures.HPCA_ICON_ACTIVE_COOLER_COMPONENT : GuiTextures.HPCA_ICON_HEAT_SINK_COMPONENT;
-    }
-
-    @Override
-    public int getUpkeepEUt() {
-        return advanced ? GTValues.VA[PhoenixConfigs.INSTANCE.features.ActiveCoolerEutUpkeep] :
+    private static HPCACoolantProviderTrait createTrait(boolean advanced) {
+        int upkeepEUt = advanced ? GTValues.VA[PhoenixConfigs.INSTANCE.features.ActiveCoolerEutUpkeep] :
                 GTValues.VA[PhoenixConfigs.INSTANCE.features.HeatSinkEutUpkeep];
-    }
-
-    @Override
-    public boolean canBeDamaged() {
-        return false;
-    }
-
-    @Override
-    public int getCoolingAmount() {
-        return advanced ? PhoenixConfigs.INSTANCE.features.ActiveCoolerStrength :
+        int coolingAmount = advanced ? PhoenixConfigs.INSTANCE.features.ActiveCoolerStrength :
                 PhoenixConfigs.INSTANCE.features.HeatSinkStrength;
-    }
-
-    @Override
-    public boolean isActiveCooler() {
-        return advanced;
-    }
-
-    @Override
-    public int getMaxCoolantPerTick() {
-        return advanced ? PhoenixConfigs.INSTANCE.features.ActiveCoolerCoolantUse : 0;
+        int maxCoolantPerTick = advanced ? PhoenixConfigs.INSTANCE.features.ActiveCoolerCoolantUse : 0;
+        return new HPCACoolantProviderTrait(upkeepEUt, upkeepEUt, false, false, coolingAmount, maxCoolantPerTick,
+                advanced);
     }
 }

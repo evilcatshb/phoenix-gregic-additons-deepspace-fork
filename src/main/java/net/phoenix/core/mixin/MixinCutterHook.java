@@ -1,6 +1,6 @@
 package net.phoenix.core.mixin;
 
-import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
+import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.integration.ae2.machine.MEPatternBufferPartMachine;
 
 import net.minecraft.world.InteractionHand;
@@ -42,8 +42,8 @@ public class MixinCutterHook {
 
         var tile = level.getBlockEntity(hitResult.getBlockPos());
 
-        if (tile instanceof IMachineBlockEntity machineHolder) {
-            var metaMachine = machineHolder.getMetaMachine();
+        if (tile instanceof MetaMachine machineHolder) {
+            var metaMachine = machineHolder;
 
             if (metaMachine instanceof MEPatternBufferPartMachine bufferMachine) {
                 if (!level.isClientSide) {

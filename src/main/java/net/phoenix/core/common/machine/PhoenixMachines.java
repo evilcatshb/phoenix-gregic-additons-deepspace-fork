@@ -2,13 +2,13 @@ package net.phoenix.core.common.machine;
 
 import com.gregtechceu.gtceu.GTCEu;
 import com.gregtechceu.gtceu.api.GTValues;
+import com.gregtechceu.gtceu.api.blockentity.BlockEntityCreationInfo;
 import com.gregtechceu.gtceu.api.data.RotationState;
-import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.api.machine.MultiblockMachineDefinition;
 import com.gregtechceu.gtceu.api.machine.multiblock.PartAbility;
-import com.gregtechceu.gtceu.api.pattern.FactoryBlockPattern;
+import com.gregtechceu.gtceu.api.multiblock.pattern.MultiblockPatternBuilder;
 import com.gregtechceu.gtceu.api.registry.registrate.MachineBuilder;
 import com.gregtechceu.gtceu.common.data.*;
 import com.gregtechceu.gtceu.common.data.machines.GTResearchMachines;
@@ -28,7 +28,7 @@ import java.util.Locale;
 import java.util.function.BiFunction;
 
 import static com.gregtechceu.gtceu.api.GTValues.*;
-import static com.gregtechceu.gtceu.api.pattern.Predicates.*;
+import static com.gregtechceu.gtceu.api.multiblock.Predicates.*;
 import static com.gregtechceu.gtceu.common.data.GTBlocks.*;
 import static net.phoenix.core.common.registry.PhoenixRegistration.REGISTRATE;
 import static net.phoenix.core.configs.PhoenixConfigs.INSTANCE;
@@ -68,8 +68,8 @@ public class PhoenixMachines {
     }
 
     public static MachineDefinition[] registerTieredMachines(String name,
-                                                             BiFunction<IMachineBlockEntity, Integer, MetaMachine> factory,
-                                                             BiFunction<Integer, MachineBuilder<MachineDefinition>, MachineDefinition> builder,
+                                                             BiFunction<BlockEntityCreationInfo, Integer, MetaMachine> factory,
+                                                             BiFunction<Integer, MachineBuilder<MachineDefinition, MetaMachine, ?>, MachineDefinition> builder,
                                                              int... tiers) {
         MachineDefinition[] definitions = new MachineDefinition[GTValues.TIER_COUNT];
         for (int tier : tiers) {
@@ -121,35 +121,36 @@ public class PhoenixMachines {
                     .appearanceBlock(PhoenixBlocks.ADVANCED_PHOENIX_COMPUTER_CASING)
                     .recipeType(GTRecipeTypes.DUMMY_RECIPES)
                     .tooltips(LangHandler.getMultiLang("gtceu.machine.high_performance_computation_array.tooltip"))
-                    .pattern(definition -> FactoryBlockPattern.start()
-                            .aisle("BBBBCCCBBBB", "CDDCCCCCDDC", "CCDCCCCCDCC", "CCCCCCCCCCC", "CCCCCCCCCCC",
+                    .pattern(definition -> MultiblockPatternBuilder.start()
+                            .slice("BBBBCCCBBBB", "CDDCCCCCDDC", "CCDCCCCCDCC", "CCCCCCCCCCC", "CCCCCCCCCCC",
                                     "CCCCCCCCCCC", "CCCCCCCCCCC", "CCCCCCCCCCC", "CCCCCCCCCCC", "CCCCCCCCCCC")
-                            .aisle("BEEBBBBBEEB", "DEEEFFFEEED", "DEEFGGGFEED", "DDDFGGGFDDD", "CBBFGGGFBBC",
+                            .slice("BEEBBBBBEEB", "DEEEFFFEEED", "DEEFGGGFEED", "DDDFGGGFDDD", "CBBFGGGFBBC",
                                     "CBBFGGGFBBC", "CCBFGGGFBCC", "CCBEFFFEBCC", "CCBBBBBBBCC", "CCBBBBBBBCC")
-                            .aisle("BBHHIIIHHBB", "CDDAAAAADDC", "CIDAAAAADIC", "CIAAAAAAAIC", "CIAAAAAAAIC",
+                            .slice("BBHHIIIHHBB", "CDDAAAAADDC", "CIDAAAAADIC", "CIAAAAAAAIC", "CIAAAAAAAIC",
                                     "CEAAAAAAAEC", "CEAAAAAAAEC", "CEAAAAAAAEC", "CEAAAAAAAEC", "CBBIIIIIBBC")
-                            .aisle("CBIIIIIIIBC", "CJAAAKAAAJC", "CJAAAKAAAJC", "CJAAAKAAAJC", "CFAAAKAAAFC",
+                            .slice("CBIIIIIIIBC", "CJAAAKAAAJC", "CJAAAKAAAJC", "CJAAAKAAAJC", "CFAAAKAAAFC",
                                     "CLAAAKAAALC", "CLAAAKAAALC", "CLAAAKAAALC", "CFAAAAAAAFC", "CBIIIIIIIBC")
-                            .aisle("CBIIIIIIIBC", "CJAAKMKAAJC", "CJAAKMKAAJC", "CJAAKMKAAJC", "CFAAKMKAAFC",
+                            .slice("CBIIIIIIIBC", "CJAAKMKAAJC", "CJAAKMKAAJC", "CJAAKMKAAJC", "CFAAKMKAAFC",
                                     "CLAAKMKAALC", "CLAAKMKAALC", "CLAAKMKAALC", "CFAAAAAAAFC", "CBIIIIIIIBC")
-                            .aisle("CBIIIIIIIBC", "CJAAAKAAAJC", "CJAAAKAAAJC", "CJAAAKAAAJC", "CFAAAKAAAFC",
+                            .slice("CBIIIIIIIBC", "CJAAAKAAAJC", "CJAAAKAAAJC", "CJAAAKAAAJC", "CFAAAKAAAFC",
                                     "CLAAAKAAALC", "CLAAAKAAALC", "CLAAAKAAALC", "CFAAAAAAAFC", "CBIIIIIIIBC")
-                            .aisle("BBHHIIIHHBB", "CDDAAAAADDC", "CIDAAAAADIC", "CIAAAAAAAIC", "CIAAAAAAAIC",
+                            .slice("BBHHIIIHHBB", "CDDAAAAADDC", "CIDAAAAADIC", "CIAAAAAAAIC", "CIAAAAAAAIC",
                                     "CEAAAAAAAEC", "CEAAAAAAAEC", "CEAAAAAAAEC", "CEAAAAAAAEC", "CBBIIIIIBBC")
-                            .aisle("BEEBBNBBEEB", "DEEEFFFEEED", "DEEOJJJOEED", "DDDOJJJODDD", "CBBOJJJOBBC",
+                            .slice("BEEBBNBBEEB", "DEEEFFFEEED", "DEEOJJJOEED", "DDDOJJJODDD", "CBBOJJJOBBC",
                                     "CBBOJJJOBBC", "CCBBJJJBBCC", "CCBBJJJBBCC", "CCBBBBBBBCC", "CCBBBBBBBCC")
-                            .aisle("BBBBCCCBBBB", "CDDCCCCCDDC", "CCDCCCCCDCC", "CCCCCCCCCCC", "CCCCCCCCCCC",
+                            .slice("BBBBCCCBBBB", "CDDCCCCCDDC", "CCDCCCCCDCC", "CCCCCCCCCCC", "CCCCCCCCCCC",
                                     "CCCCCCCCCCC", "CCCCCCCCCCC", "CCCCCCCCCCC", "CCCCCCCCCCC", "CCCCCCCCCCC")
-                            .where("A", air())
+                            .where('A', air())
                             .where('B', blocks(PhoenixBlocks.SPACE_TIME_COOLED_ETERNITY_CASING.get()))
                             .where('C', any())
                             .where('D', blocks(PhoenixBlocks.AKASHIC_ZERONIUM_CASING.get()))
-                            .where('E', blocks(PhoenixBlocks.ADVANCED_PHOENIX_COMPUTER_CASING.get()).setMinGlobalLimited(20)
-                                    .or(abilities(PartAbility.INPUT_ENERGY).setMinGlobalLimited(1)
-                                            .setMaxGlobalLimited(2, 1))
-                                    .or(abilities(PartAbility.IMPORT_FLUIDS).setMaxGlobalLimited(1))
-                                    .or(abilities(PartAbility.COMPUTATION_DATA_TRANSMISSION).setExactLimit(1))
-                                    .or(autoAbilities(true, false, false)))
+                            .where('E',
+                                    blocks(PhoenixBlocks.ADVANCED_PHOENIX_COMPUTER_CASING.get()).setMinGlobalLimited(20)
+                                            .or(abilities(PartAbility.INPUT_ENERGY).setMinGlobalLimited(1)
+                                                    .setMaxGlobalLimited(2, 1))
+                                            .or(abilities(PartAbility.IMPORT_FLUIDS).setMaxGlobalLimited(1))
+                                            .or(abilities(PartAbility.COMPUTATION_DATA_TRANSMISSION).setExactLimit(1))
+                                            .or(autoAbilities(true, false, false)))
                             .where('F', blocks(PhoenixBlocks.PHOENIX_COMPUTER_HEAT_VENT.get()))
                             .where('G', blocks(PhoenixResearchMachines.ADVANCED_PHOENIX_COMPUTATION_COMPONENT.get())
                                     .or(blocks(PhoenixResearchMachines.ADVANCED_PHOENIX_COMPUTATION_COMPONENT.get()))
@@ -174,11 +175,11 @@ public class PhoenixMachines {
                      * .shapeInfos(definition -> {
                      * List<MultiblockShapeInfo> shapeInfo = new ArrayList<>();
                      * .ShapeInfoBuilder builder = MultiblockShapeInfo.builder()
-                     * .aisle("SA", "CC", "CC", "OC", "AA")
-                     * .aisle("VA", "8V", "5V", "2V", "VA")
-                     * .aisle("VA", "7V", "4V", "1V", "VA")
-                     * .aisle("VA", "6V", "3V", "0V", "VA")
-                     * .aisle("AA", "EC", "MC", "HC", "AA")
+                     * .slice("SA", "CC", "CC", "OC", "AA")
+                     * .slice("VA", "8V", "5V", "2V", "VA")
+                     * .slice("VA", "7V", "4V", "1V", "VA")
+                     * .slice("VA", "6V", "3V", "0V", "VA")
+                     * .slice("AA", "EC", "MC", "HC", "AA")
                      * .where('S', GTResearchMachines.HIGH_PERFORMANCE_COMPUTING_ARRAY, Direction.NORTH)
                      * .where('A', ADVANCED_COMPUTER_CASING)
                      * .where('V', COMPUTER_HEAT_VENT)
@@ -244,7 +245,9 @@ public class PhoenixMachines {
                      * return shapeInfo;
                      * })
                      */
-                    .workableCasingModel(PhoenixGregicAdditons.id("block/casings/advanced_computer_casing/phoenix_advanced_computer_casing"),
+                    .workableCasingModel(
+                            PhoenixGregicAdditons
+                                    .id("block/casings/advanced_computer_casing/phoenix_advanced_computer_casing"),
                             GTCEu.id("block/multiblock/hpca"))
                     .register();
         }

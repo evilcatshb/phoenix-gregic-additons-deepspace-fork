@@ -1,37 +1,33 @@
 package net.phoenix.core.integration.ae2.widget;
 
-import com.gregtechceu.gtceu.api.gui.GuiTextures;
-
-import com.lowdragmc.lowdraglib.gui.util.DrawerHelper;
-import com.lowdragmc.lowdraglib.gui.util.TextFormattingUtil;
-import com.lowdragmc.lowdraglib.gui.widget.Widget;
-import com.lowdragmc.lowdraglib.side.fluid.forge.FluidHelperImpl;
-import com.lowdragmc.lowdraglib.utils.Position;
-import com.lowdragmc.lowdraglib.utils.Size;
+import com.gregtechceu.gtceu.common.mui.GTGuiTextures;
+import com.gregtechceu.gtceu.integration.ae2.gui.AEGuiHelper;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fluids.FluidStack;
 import net.phoenix.core.integration.ae2.METagInputHatchPartMachine;
 
-import org.jetbrains.annotations.NotNull;
+import brachy.modularui.screen.viewport.ModularGuiContext;
+import brachy.modularui.theme.WidgetThemeEntry;
+import brachy.modularui.widget.Widget;
 
-public class FluidPreviewWidget extends Widget {
+public class FluidPreviewWidget extends Widget<FluidPreviewWidget> {
 
     private final int index;
     private final METagInputHatchPartMachine machine;
 
-    public FluidPreviewWidget(int x, int y, int index, METagInputHatchPartMachine machine) {
-        super(new Position(x, y), new Size(18, 18));
+    public FluidPreviewWidget(int index, METagInputHatchPartMachine machine) {
         this.index = index;
         this.machine = machine;
     }
 
+    @OnlyIn(Dist.CLIENT)
     @Override
-    public void drawInBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        Position pos = getPosition();
-        // Always draw the slot background
-        GuiTextures.FLUID_SLOT.draw(graphics, mouseX, mouseY, pos.x, pos.y, 18, 18);
+    public void draw(ModularGuiContext context, WidgetThemeEntry<?> widgetTheme) {
+        var graphics = context.getGraphics();
+        GTGuiTextures.FLUID_SLOT.draw(context, 0, 0, 18, 18);
 
         if (machine.previewFluids == null || index < 0 || index >= machine.previewFluids.length) return;
 
@@ -40,36 +36,24 @@ public class FluidPreviewWidget extends Widget {
 
         if (stack == null || stack.isEmpty()) return;
 
-        // Draw the fluid icon
-        DrawerHelper.drawFluidForGui(
-                graphics,
-                FluidHelperImpl.toFluidStack(stack),
-                amount,
-                pos.x + 1,
-                pos.y + 1,
-                16,
-                16);
+        AEGuiHelper.drawFluid(graphics, stack, 1, 1, 16, 16);
 
-        // Only draw the text if there is actual stored fluid (matches Bus behavior)
         if (amount > 0) {
-            String txt = TextFormattingUtil.formatLongToCompactStringBuckets(amount, 3) + "B";
-            DrawerHelper.drawStringFixedCorner(
-                    graphics, txt,
-                    pos.x + 17, pos.y + 17,
-                    0xFFFFFFFF, true, 0.45f);
+            AEGuiHelper.drawAmountOverlay(graphics, amount, 1, 1);
         }
     }
 
+    @OnlyIn(Dist.CLIENT)
     @Override
-    public void drawInForeground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        if (!isMouseOverElement(mouseX, mouseY)) return;
+    public void drawForeground(ModularGuiContext context) {
+        if (!isHovering()) return;
 
         FluidStack stack = machine.previewFluids[index];
         if (stack == null || stack.isEmpty()) return;
 
-        graphics.renderTooltip(
+        context.getGraphics().renderTooltip(
                 Minecraft.getInstance().font,
                 stack.getDisplayName(),
-                mouseX, mouseY);
+                context.getMouseX(), context.getMouseY());
     }
 }

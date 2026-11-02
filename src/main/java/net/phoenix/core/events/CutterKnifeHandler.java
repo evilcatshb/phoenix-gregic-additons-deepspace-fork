@@ -1,21 +1,20 @@
 package net.phoenix.core.events;
 
-import com.glodblock.github.extendedae.container.ContainerRenamer;
-import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
+import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import com.gregtechceu.gtceu.integration.ae2.machine.MEPatternBufferPartMachine;
-
-import appeng.menu.MenuOpener;
-import appeng.menu.locator.MenuLocators;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
-
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.registries.ForgeRegistries;
+
+import appeng.menu.MenuOpener;
+import appeng.menu.locator.MenuLocators;
+import com.glodblock.github.extendedae.container.ContainerRenamer;
 
 public class CutterKnifeHandler {
 
@@ -31,9 +30,9 @@ public class CutterKnifeHandler {
         if (!isKnife(stack)) return;
 
         BlockEntity be = event.getLevel().getBlockEntity(event.getPos());
-        if (!(be instanceof IMachineBlockEntity mbe)) return;
+        if (!(be instanceof MetaMachine mbe)) return;
 
-        if (!(mbe.getMetaMachine() instanceof MEPatternBufferPartMachine)) return;
+        if (!(mbe instanceof MEPatternBufferPartMachine)) return;
 
         if (!event.getLevel().isClientSide) {
             MenuOpener.open(ContainerRenamer.TYPE, player, MenuLocators.forBlockEntity(be));
@@ -44,7 +43,6 @@ public class CutterKnifeHandler {
     }
 
     private boolean isKnife(ItemStack stack) {
-        return stack.is(ForgeRegistries.ITEMS.getValue(CERTUS))
-                || stack.is(ForgeRegistries.ITEMS.getValue(NETHER));
+        return stack.is(ForgeRegistries.ITEMS.getValue(CERTUS)) || stack.is(ForgeRegistries.ITEMS.getValue(NETHER));
     }
 }

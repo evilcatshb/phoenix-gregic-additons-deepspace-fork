@@ -28,8 +28,7 @@ public class PhoenixAEMachines {
                     .rotationState(RotationState.ALL)
                     .abilities(
                             PartAbility.IMPORT_ITEMS,
-                            PartAbility.EXPORT_ITEMS
-                    )
+                            PartAbility.EXPORT_ITEMS)
                     .colorOverlayTieredHullModel(PhoenixGregicAdditons.id("block/me_tag_input_bus"))
                     .langValue("ME Tag Input Bus")
                     .tooltips(
@@ -38,14 +37,13 @@ public class PhoenixAEMachines {
                             Component.translatable("gtceu.part_sharing.enabled"))
                     .register();
 
-             ME_TAG_INPUT_HATCH = REGISTRATE
+            ME_TAG_INPUT_HATCH = REGISTRATE
                     .machine("me_tag_input_hatch", METagInputHatchPartMachine::new)
                     .tier(UHV)
                     .rotationState(RotationState.ALL)
                     .abilities(
                             PartAbility.IMPORT_FLUIDS,
-                            PartAbility.EXPORT_FLUIDS
-                    )
+                            PartAbility.EXPORT_FLUIDS)
                     .colorOverlayTieredHullModel(PhoenixGregicAdditons.id("block/me_tag_input_hatch"))
                     .langValue("ME Tag Input Hatch")
                     .tooltips(

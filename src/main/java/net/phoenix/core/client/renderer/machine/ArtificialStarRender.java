@@ -3,7 +3,7 @@ package net.phoenix.core.client.renderer.machine;
 import com.gregtechceu.gtceu.api.machine.multiblock.WorkableElectricMultiblockMachine;
 import com.gregtechceu.gtceu.client.renderer.machine.DynamicRender;
 import com.gregtechceu.gtceu.client.renderer.machine.DynamicRenderType;
-import com.gregtechceu.gtceu.client.util.ModelUtils;
+import com.gregtechceu.gtceu.client.util.ModelEventHelper;
 
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -41,8 +41,11 @@ public class ArtificialStarRender extends DynamicRender<WorkableElectricMultiblo
     private static final float MAX_ROTATION_ANGLE = 30.0F; // Amplitude máxima do movimento principal
 
     private ArtificialStarRender() {
-        ModelUtils.registerBakeEventListener(true, event -> {
-            artificialStarModel = event.getModels().get(ARTIFICIAL_STAR_MODEL_RL);
+        ModelEventHelper.registerBakeEventListener(true, (rl, baked, rootModel, modelBakery) -> {
+            if (rl.equals(ARTIFICIAL_STAR_MODEL_RL)) {
+                artificialStarModel = baked;
+            }
+            return baked;
         });
     }
 
@@ -137,6 +140,6 @@ public class ArtificialStarRender extends DynamicRender<WorkableElectricMultiblo
 
     @Override
     public AABB getRenderBoundingBox(WorkableElectricMultiblockMachine machine) {
-        return new AABB(machine.getPos()).inflate(getViewDistance());
+        return new AABB(machine.getBlockPos()).inflate(getViewDistance());
     }
 }

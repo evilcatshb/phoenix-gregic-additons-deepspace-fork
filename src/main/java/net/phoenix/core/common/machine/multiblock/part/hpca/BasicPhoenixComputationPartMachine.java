@@ -1,12 +1,9 @@
 package net.phoenix.core.common.machine.multiblock.part.hpca;
 
 import com.gregtechceu.gtceu.api.GTValues;
-import com.gregtechceu.gtceu.api.capability.IHPCAComputationProvider;
-import com.gregtechceu.gtceu.api.gui.GuiTextures;
-import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
-import com.gregtechceu.gtceu.common.machine.multiblock.part.hpca.HPCAComputationPartMachine;
-
-import com.lowdragmc.lowdraglib.gui.texture.ResourceTexture;
+import com.gregtechceu.gtceu.api.blockentity.BlockEntityCreationInfo;
+import com.gregtechceu.gtceu.common.machine.multiblock.part.hpca.HPCAComponentPartMachine;
+import com.gregtechceu.gtceu.common.mui.GTGuiTextures;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.phoenix.core.configs.PhoenixConfigs;
@@ -21,77 +18,17 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class BasicPhoenixComputationPartMachine extends HPCAComputationPartMachine implements IHPCAComputationProvider {
+public class BasicPhoenixComputationPartMachine extends HPCAComponentPartMachine {
 
-    // You can define new tiers for your part if you need, or simply use a single tier.
-    // For this example, we'll make a single, very powerful part.
-    public BasicPhoenixComputationPartMachine(IMachineBlockEntity holder) {
-        // We pass 'false' to the super constructor because we are defining a new,
-        // single-tier part that isn't 'advanced' in the base sense.
-        super(holder, false);
-    }
-
-    /**
-     * Defines the component icon.
-     * You will need to define a custom ResourceTexture for this.
-     * For now, we will use a placeholder texture from GTCEu and add a comment.
-     * 
-     * @return The resource texture for the part's icon.
-     */
-    @Override
-    public ResourceTexture getComponentIcon() {
-        if (isDamaged()) {
-            // TODO: Replace with own damaged texture
-            return GuiTextures.HPCA_ICON_DAMAGED_COMPUTATION_COMPONENT;
-        }
-        // TODO: Replace with own custom texture for the Phoenix part
-        return GuiTextures.HPCA_ICON_ADVANCED_COMPUTATION_COMPONENT;
-    }
-
-    /**
-     * Overrides the energy upkeep required per tick.
-     * We'll make this part a late-game component, so it has a high upkeep.
-     * 
-     * @return The upkeep EUt per tick.
-     */
-    @Override
-    public int getUpkeepEUt() {
-        return GTValues.VA[PhoenixConfigs.INSTANCE.features.basicPCUEutUpkeep];
-    }
-
-    /**
-     * Overrides the maximum EUt the part can handle before it breaks.
-     * We'll set this to a very high value to match the part's tier.
-     * 
-     * @return The maximum EUt the part can handle.
-     */
-    @Override
-    public int getMaxEUt() {
-        return GTValues.VA[PhoenixConfigs.INSTANCE.features.basicPCUMaxEUt];
-    }
-
-    /**
-     * Overrides the CWU (Computation Unit) output per tick.
-     * This is the core purpose of the part.
-     * We'll give it a very high value to make it worthwhile.
-     * 
-     * @return The CWU provided per tick.
-     */
-    @Override
-    public int getCWUPerTick() {
-        if (isDamaged()) return PhoenixConfigs.INSTANCE.features.damagedBasicPCUStrength;
-        return PhoenixConfigs.INSTANCE.features.BasicPCUStrength;
-    }
-
-    /**
-     * Overrides the amount of cooling the part provides.
-     * Even though it's a powerful part, it still needs to be cooled.
-     * You can customize this based on your balancing needs.
-     * 
-     * @return The amount of cooling provided per tick.
-     */
-    @Override
-    public int getCoolingPerTick() {
-        return PhoenixConfigs.INSTANCE.features.BasicPCUCoolantUsed; // Double the base advanced part's cooling.
+    public BasicPhoenixComputationPartMachine(BlockEntityCreationInfo info) {
+        super(info, false,
+                GTGuiTextures.HPCA_ADVANCED_COMPUTATION_COMPONENT,
+                GTGuiTextures.HPCA_DAMAGED_COMPUTATION_COMPONENT,
+                new PhoenixComputationTrait(
+                        GTValues.VA[PhoenixConfigs.INSTANCE.features.basicPCUEutUpkeep],
+                        GTValues.VA[PhoenixConfigs.INSTANCE.features.basicPCUMaxEUt],
+                        PhoenixConfigs.INSTANCE.features.BasicPCUStrength,
+                        PhoenixConfigs.INSTANCE.features.BasicPCUCoolantUsed,
+                        PhoenixConfigs.INSTANCE.features.damagedBasicPCUStrength));
     }
 }

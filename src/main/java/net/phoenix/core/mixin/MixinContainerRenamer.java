@@ -1,6 +1,6 @@
 package net.phoenix.core.mixin;
 
-import com.gregtechceu.gtceu.api.machine.IMachineBlockEntity;
+import com.gregtechceu.gtceu.api.machine.MetaMachine;
 
 import net.minecraft.network.chat.Component;
 import net.phoenix.core.api.CustomNameAccess;
@@ -38,11 +38,11 @@ public abstract class MixinContainerRenamer {
                                Object host,
                                CallbackInfo ci) {
         Object target = resolveTarget(host, inv.player);
-        if (!(target instanceof IMachineBlockEntity holder)) {
+        if (!(target instanceof MetaMachine holder)) {
             return;
         }
 
-        Object meta = holder.getMetaMachine();
+        Object meta = holder;
         if (!(meta instanceof CustomNameAccess access)) {
             return;
         }
@@ -70,7 +70,7 @@ public abstract class MixinContainerRenamer {
         try {
             var locate = host.getClass()
                     .getMethod("locate", net.minecraft.world.entity.player.Player.class, Class.class);
-            Object result = locate.invoke(host, player, IMachineBlockEntity.class);
+            Object result = locate.invoke(host, player, MetaMachine.class);
             if (result == null) return host;
 
             try {

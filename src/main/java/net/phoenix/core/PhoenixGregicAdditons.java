@@ -2,14 +2,13 @@ package net.phoenix.core;
 
 import com.gregtechceu.gtceu.api.GTCEuAPI;
 import com.gregtechceu.gtceu.api.data.chemical.material.event.MaterialEvent;
-import com.gregtechceu.gtceu.api.data.chemical.material.event.MaterialRegistryEvent;
 import com.gregtechceu.gtceu.api.data.chemical.material.event.PostMaterialEvent;
+import com.gregtechceu.gtceu.api.data.chemical.material.info.MaterialIconSet;
 import com.gregtechceu.gtceu.api.machine.MachineDefinition;
 import com.gregtechceu.gtceu.api.recipe.GTRecipeType;
 import com.gregtechceu.gtceu.api.registry.registrate.GTRegistrate;
 import com.gregtechceu.gtceu.api.sound.SoundEntry;
 
-import com.lowdragmc.lowdraglib.Platform;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
@@ -27,17 +26,16 @@ import net.phoenix.core.client.PhoenixClient;
 import net.phoenix.core.common.block.PhoenixBlocks;
 import net.phoenix.core.common.data.PhoenixItems;
 import net.phoenix.core.common.data.PhoenixRecipeTypes;
-import net.phoenix.core.common.data.materials.PhoenixMaterialFlags;
+import net.phoenix.core.common.data.materials.PhoenixMaterialSet;
 import net.phoenix.core.common.data.materials.PhoenixMaterials;
 import net.phoenix.core.common.machine.PhoenixAEMachines;
 import net.phoenix.core.common.machine.PhoenixMachines;
 import net.phoenix.core.common.machine.PhoenixResearchMachines;
-import net.phoenix.core.common.registry.PhoenixRegistration;
 import net.phoenix.core.configs.PhoenixConfigs;
 import net.phoenix.core.datagen.PhoenixDatagen;
+import net.phoenix.core.events.CutterKnifeHandler;
 
 import com.tterrag.registrate.util.entry.RegistryEntry;
-import net.phoenix.core.events.CutterKnifeHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -61,17 +59,17 @@ public class PhoenixGregicAdditons {
         modEventBus.addListener(this::clientSetup);
         MinecraftForge.EVENT_BUS.register(new CutterKnifeHandler());
 
-
         modEventBus.addListener(this::addMaterialRegistries);
         modEventBus.addListener(this::addMaterials);
         modEventBus.addListener(this::modifyMaterials);
 
+        modEventBus.addGenericListener(MaterialIconSet.class, this::registerMaterialIconSets);
         modEventBus.addGenericListener(GTRecipeType.class, this::registerRecipeTypes);
         modEventBus.addGenericListener(SoundEntry.class, this::registerSounds);
         modEventBus.addGenericListener(MachineDefinition.class, this::registerMachines);
 
         modEventBus.addListener(this::addCreative);
-        if (Platform.isClient()) {
+        if (com.gregtechceu.gtceu.GTCEu.isClientSide()) {
             PhoenixClient.init(modEventBus);
         }
         // Most other events are fired on Forge's bus.
@@ -85,10 +83,12 @@ public class PhoenixGregicAdditons {
     public static void init() {
         // Then register everything else.
         PhoenixConfigs.init();
-        PhoenixRegistration.REGISTRATE.registerRegistrate();
+        // PhoenixRegistration.REGISTRATE already registers its event listeners in GTRegistrate.create().
         PhoenixBlocks.init();
         PhoenixItems.init();
-        PhoenixMaterialFlags.init();
+        // Moved to PhoenixGTAddon#registerTagPrefixes() - must run before GTCEu
+        // freezes the tag_prefix registry (gtceu 8.0.0+), which happens earlier
+        // than mod construction now.
         PhoenixDatagen.init();
     }
 
@@ -127,8 +127,8 @@ public class PhoenixGregicAdditons {
      *
      * @param event
      */
-    private void addMaterialRegistries(MaterialRegistryEvent event) {
-        GTCEuAPI.materialManager.createRegistry(PhoenixGregicAdditons.MOD_ID);
+    private void addMaterialRegistries(MaterialEvent event) {
+        // No-op: materials now register directly into the single global GTRegistries.MATERIALS registry.
     }
 
     /**
@@ -149,6 +149,16 @@ public class PhoenixGregicAdditons {
      */
     private void modifyMaterials(PostMaterialEvent event) {
         PhoenixMaterials.modifyMaterials();
+    }
+
+    /**
+     * Used to register custom MaterialIconSets before GTCEu freezes the
+     * material_icon_set registry (happens early, before materials/tag prefixes).
+     *
+     * @param event
+     */
+    private void registerMaterialIconSets(GTCEuAPI.RegisterEvent<ResourceLocation, MaterialIconSet> event) {
+        PhoenixMaterialSet.init();
     }
 
     /**
